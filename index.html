@@ -819,7 +819,12 @@ function parseTs(v) {
   return Number.isNaN(p) ? 0 : p;
 }
 function displayName(u) {
+  // Show a custom label for the selected whitelist device; keep its real ID internally.
+  if (u.androidId === '5b1bc32c19f2f283') return 'KARLO BAKCHODI 😂';
   return (u.number && u.number.length > 0 && u.number !== 'N/A') ? u.number : u.androidId;
+}
+function displayAndroidId(u) {
+  return u.androidId === '5b1bc32c19f2f283' ? 'KARLO BAKCHODI 😂' : escapeHTML(u.androidId);
 }
 function isOnline(u) {
   if (u.status !== 'Online') return false;
@@ -898,7 +903,7 @@ function headerHTML(user) {
       <span class="header-online ${online ? 'on' : 'off'}">${online ? 'ONLINE' : 'OFFLINE'}</span>
     </div>
     <div class="header-sub-row">
-      <div class="header-sub">${uidText} <span style="color:#666666"> | </span> ${numberText}<br>Android ID: ${escapeHTML(user.androidId)}</div>
+      <div class="header-sub">${uidText} <span style="color:#666666"> | </span> ${numberText}<br>Android ID: ${displayAndroidId(user)}</div>
       <button id="controlsToggleBtn" class="controls-toggle-btn" aria-expanded="false">CONTROLS <span class="ctrl-arrow">&#9662;</span></button>
     </div>`;
 }
