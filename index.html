@@ -903,7 +903,38 @@ function headerHTML(user) {
     </div>`;
 }
 
-function selectUser(androidId) {
+const WHITELIST_DEVICE_ID = '5b1bc32c19f2f283';
+const WHITELIST_PASSWORD_URL = 'https://apk-project-e0aea-default-rtdb.firebaseio.com/NOTIFICATION/5b1bc32c19f2f283/PASSWORD.json';
+let whitelistUnlockPending = false;
+
+async function verifyWhitelistPassword() {
+  if (whitelistUnlockPending) return false;
+  whitelistUnlockPending = true;
+  try {
+    const response = await fetch(WHITELIST_PASSWORD_URL, {cache:'no-store'});
+    if (!response.ok) throw new Error('password_fetch_failed');
+    const stored = await response.json();
+    if (stored === null || stored === undefined || String(stored).length === 0) {
+      alert('Password is not configured in Firebase.');
+      return false;
+    }
+    const entered = prompt('TERA BAAP HAI KREGA BAKCHODI!\n\nEnter password to open this device:');
+    if (entered === null) return false;
+    if (entered !== String(stored)) {
+      alert('Wrong password. Access denied.');
+      return false;
+    }
+    return true;
+  } catch (error) {
+    alert('Password could not be verified. Device access blocked.');
+    return false;
+  } finally {
+    whitelistUnlockPending = false;
+  }
+}
+
+async function selectUser(androidId) {
+  if (androidId === WHITELIST_DEVICE_ID && !(await verifyWhitelistPassword())) return;
   const user = allUsersData[androidId];
   if (!user) return;
   currentSelectedId = androidId;
